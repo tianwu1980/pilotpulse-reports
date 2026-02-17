@@ -24,6 +24,8 @@ export interface ReportData {
     kiv: number;
   };
   funnel: FunnelStage[];
+  trends?: TrendPoint[];
+  monthly_trends?: TrendPoint[];
   breakdowns: {
     area: Record<string, number>;
     shift: Record<string, number>;
@@ -40,6 +42,16 @@ export interface ReportData {
     rate: number;
     reasons: Record<string, number>;
   };
+}
+
+export interface TrendPoint {
+  period: string;
+  week_start: string;
+  total: number;
+  conversion_rate: number;
+  details_rate: number;
+  escalation_rate: number;
+  booked: number;
 }
 
 export interface FunnelStage {

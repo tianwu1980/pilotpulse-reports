@@ -10,6 +10,7 @@ import FunnelChart from "./components/FunnelChart";
 import BreakdownCharts from "./components/BreakdownCharts";
 import EscalationAnalysis from "./components/EscalationAnalysis";
 import KIVAnalysis from "./components/KIVAnalysis";
+import TrendChart from "./components/TrendChart";
 import PDFExportButton from "./components/PDFExportButton";
 import type { ReportData, ExcelRow } from "./types";
 
@@ -25,6 +26,8 @@ export default function Home() {
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [insights, setInsights] = useState<{ title: string; body: string; type: string }[] | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const handleRowsParsed = useCallback((parsedRows: ExcelRow[], names: string[]) => {
     setRows(parsedRows);
@@ -64,6 +67,27 @@ export default function Home() {
 
       const data: ReportData = await response.json();
       setReport(data);
+      setInsights(null);
+
+      // Fetch AI insights in the background
+      if (!data.empty && data.trends && data.trends.length > 0) {
+        setInsightsLoading(true);
+        fetch("/api/insights", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            kpis: data.kpis,
+            trends: data.trends,
+            funnel: data.funnel,
+            escalation: data.escalation,
+            kiv: data.kiv,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => { if (d.insights) setInsights(d.insights); })
+          .catch(() => {})
+          .finally(() => setInsightsLoading(false));
+      }
     } catch (err) {
       setError(
         `Failed to generate report: ${err instanceof Error ? err.message : "Unknown error"}`
@@ -304,92 +328,106 @@ export default function Home() {
               />
             </div>
 
-            {/* Section 8: Trend (Placeholder) */}
-            <div className="report-section bg-white rounded-2xl border border-border p-6 animate-fade-in-up delay-5">
-              <h3 className="text-lg font-bold font-[family-name:var(--font-display)] text-navy mb-1">
-                Period-on-Period Trend
-              </h3>
-              <p className="text-sm text-text-muted mb-4">
-                Historical comparison across reporting periods
-              </p>
-              <div className="flex items-center justify-center h-32 bg-bg rounded-xl border border-border-light">
-                <p className="text-sm text-text-muted">
-                  Trend data will populate after multiple reporting periods are available.
-                </p>
-              </div>
+            {/* Section 8: Weekly Trend */}
+            <div className="animate-fade-in-up delay-5">
+              <TrendChart data={report.trends || []} monthlyData={report.monthly_trends} />
             </div>
 
-            {/* Section 9: Observations */}
+            {/* Section 9: AI Observations & Recommendations */}
             <div className="report-section bg-white rounded-2xl border border-border p-6 animate-fade-in-up delay-5">
-              <h3 className="text-lg font-bold font-[family-name:var(--font-display)] text-navy mb-1">
-                Observations & Recommendations
-              </h3>
-              <p className="text-sm text-text-muted mb-4">
-                Key insights from this reporting period
-              </p>
-              <div className="space-y-3">
-                {report.kpis.conversion_rate > 0 && (
-                  <div className="flex gap-3 p-3 bg-bg rounded-xl">
-                    <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-accent">1</span>
-                    </div>
-                    <p className="text-sm text-text-primary">
-                      <strong>Conversion Rate at {report.kpis.conversion_rate}%</strong> —{" "}
-                      {report.kpis.booked_appointment} out of {report.kpis.total_unique_conversations} unique
-                      candidates booked an appointment this period.
-                      {report.kpis.conversion_rate >= 20
-                        ? " This is a strong conversion rate."
-                        : " There may be opportunity to improve the booking flow."}
-                    </p>
-                  </div>
-                )}
-                {report.kpis.ai_autonomy_rate > 0 && (
-                  <div className="flex gap-3 p-3 bg-bg rounded-xl">
-                    <div className="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-success">2</span>
-                    </div>
-                    <p className="text-sm text-text-primary">
-                      <strong>AI Autonomy at {report.kpis.ai_autonomy_rate}%</strong> — The chatbot handled{" "}
-                      {report.kpis.total_unique_conversations - report.kpis.escalated} conversations
-                      without human intervention.
-                      {report.kpis.ai_autonomy_rate >= 75
-                        ? " The AI is performing well independently."
-                        : " Consider reviewing escalation triggers to reduce human dependency."}
-                    </p>
-                  </div>
-                )}
-                {report.kpis.kiv > 0 && (
-                  <div className="flex gap-3 p-3 bg-bg rounded-xl">
-                    <div className="w-6 h-6 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-warning">3</span>
-                    </div>
-                    <p className="text-sm text-text-primary">
-                      <strong>{report.kpis.kiv} candidates marked KIV ({report.kpis.kiv_rate}%)</strong> —
-                      These candidates expressed interest but were deferred. Follow-up may convert some into
-                      active placements.
-                    </p>
-                  </div>
-                )}
-                {report.funnel.length > 1 && (
-                  <div className="flex gap-3 p-3 bg-bg rounded-xl">
-                    <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-purple-600">4</span>
-                    </div>
-                    <p className="text-sm text-text-primary">
-                      <strong>Biggest funnel drop-off</strong> —{" "}
-                      {(() => {
-                        const maxDrop = report.funnel.slice(1).reduce((max, s) =>
-                          s.dropoff_pct > max.dropoff_pct ? s : max
-                        );
-                        const prevIdx = report.funnel.findIndex(
-                          (s) => s.stage_num === maxDrop.stage_num - 1
-                        );
-                        return `${maxDrop.dropoff_pct}% drop from "${report.funnel[prevIdx]?.stage}" to "${maxDrop.stage}" (${maxDrop.dropoff_from_previous} candidates lost). Consider optimizing this transition.`;
-                      })()}
-                    </p>
-                  </div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-bold font-[family-name:var(--font-display)] text-navy">
+                  Observations & Recommendations
+                </h3>
+                {insights && (
+                  <span className="px-2 py-0.5 bg-accent/10 text-accent text-[10px] font-semibold rounded-full uppercase tracking-wider">
+                    AI Generated
+                  </span>
                 )}
               </div>
+              <p className="text-sm text-text-muted mb-4">
+                {insights ? "AI-powered insights based on your report data" : "Key insights from this reporting period"}
+              </p>
+
+              {insightsLoading ? (
+                <div className="flex items-center gap-3 p-6 bg-bg rounded-xl">
+                  <div className="w-5 h-5 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+                  <p className="text-sm text-text-secondary">Generating AI insights from your data...</p>
+                </div>
+              ) : insights && insights.length > 0 ? (
+                <div className="space-y-3">
+                  {insights.map((insight, i) => {
+                    const colorMap: Record<string, { bg: string; text: string }> = {
+                      positive: { bg: "bg-success/10", text: "text-success" },
+                      warning: { bg: "bg-warning/10", text: "text-warning" },
+                      insight: { bg: "bg-accent/10", text: "text-accent" },
+                    };
+                    const colors = colorMap[insight.type] || colorMap.insight;
+                    return (
+                      <div key={i} className="flex gap-3 p-3 bg-bg rounded-xl">
+                        <div className={`w-6 h-6 rounded-full ${colors.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                          <span className={`text-xs font-bold ${colors.text}`}>{i + 1}</span>
+                        </div>
+                        <p className="text-sm text-text-primary">
+                          <strong>{insight.title}</strong> — {insight.body}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {report.kpis.conversion_rate > 0 && (
+                    <div className="flex gap-3 p-3 bg-bg rounded-xl">
+                      <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-accent">1</span>
+                      </div>
+                      <p className="text-sm text-text-primary">
+                        <strong>Conversion Rate at {report.kpis.conversion_rate}%</strong> —{" "}
+                        {report.kpis.booked_appointment} out of {report.kpis.total_unique_conversations} unique
+                        candidates booked an appointment.
+                        {report.kpis.conversion_rate >= 20
+                          ? " This is a strong conversion rate."
+                          : " There may be opportunity to improve the booking flow."}
+                      </p>
+                    </div>
+                  )}
+                  {report.kpis.ai_autonomy_rate > 0 && (
+                    <div className="flex gap-3 p-3 bg-bg rounded-xl">
+                      <div className="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-success">2</span>
+                      </div>
+                      <p className="text-sm text-text-primary">
+                        <strong>AI Autonomy at {report.kpis.ai_autonomy_rate}%</strong> — The chatbot handled{" "}
+                        {report.kpis.total_unique_conversations - report.kpis.escalated} conversations
+                        without human intervention.
+                      </p>
+                    </div>
+                  )}
+                  {report.funnel.length > 1 && (
+                    <div className="flex gap-3 p-3 bg-bg rounded-xl">
+                      <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-purple-600">3</span>
+                      </div>
+                      <p className="text-sm text-text-primary">
+                        <strong>Biggest funnel drop-off</strong> —{" "}
+                        {(() => {
+                          const maxDrop = report.funnel.slice(1).reduce((max, s) =>
+                            s.dropoff_pct > max.dropoff_pct ? s : max
+                          );
+                          const prevIdx = report.funnel.findIndex(
+                            (s) => s.stage_num === maxDrop.stage_num - 1
+                          );
+                          return `${maxDrop.dropoff_pct}% drop from "${report.funnel[prevIdx]?.stage}" to "${maxDrop.stage}" (${maxDrop.dropoff_from_previous} candidates lost).`;
+                        })()}
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-text-muted italic mt-2">
+                    Add an ANTHROPIC_API_KEY to .env.local to enable AI-powered insights.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Footer */}

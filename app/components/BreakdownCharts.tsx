@@ -65,9 +65,9 @@ function BreakdownPie({
               ))}
             </Pie>
             <Tooltip
-              formatter={(value) => [
+              formatter={(value, name) => [
                 `${value} (${((Number(value) / total) * 100).toFixed(1)}%)`,
-                "Count",
+                name,
               ]}
               contentStyle={{
                 background: "#fff",
