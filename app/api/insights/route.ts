@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 
+const CLIENT_INSIGHTS: Record<string, { context: string; kpiNames: { siteRec: string; kiv: string }; focus: string }> = {
+  henderson: {
+    context: "Henderson Security's AI chatbot recruitment system (PilotPulse) for security guard recruitment",
+    kpiNames: { siteRec: "Site Recommendation Rate", kiv: "KIV Rate" },
+    focus: "conversion improvement, escalation reduction, trend patterns, funnel bottlenecks, KIV follow-up potential",
+  },
+  call_lade: {
+    context: "Call Lade HR's AI chatbot recruitment system (PilotPulse) for logistics and haulage roles (Prime Mover Driver, Lashing Specialist, Reefer Technician, IGH)",
+    kpiNames: { siteRec: "Eligibility Rate", kiv: "Rejection Rate" },
+    focus: "conversion improvement, eligibility criteria optimization, escalation reduction, trend patterns, rejection analysis",
+  },
+};
+
 export async function POST(request: Request) {
   if (!ANTHROPIC_API_KEY) {
     return NextResponse.json(
@@ -11,19 +24,21 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { kpis, trends, funnel, escalation, kiv } = body;
+  const { client_id, kpis, trends, funnel, escalation, kiv } = body;
 
-  const prompt = `You are a recruitment analytics consultant analyzing performance data for Henderson Security's AI chatbot recruitment system (PilotPulse).
+  const ic = CLIENT_INSIGHTS[client_id] || CLIENT_INSIGHTS.henderson;
+
+  const prompt = `You are a recruitment analytics consultant analyzing performance data for ${ic.context}.
 
 Here is the data for this reporting period:
 
 **KPIs:**
 - Total Unique Conversations: ${kpis.total_unique_conversations}
 - Details Completion Rate: ${kpis.details_completion_rate}%
-- Site Recommendation Rate: ${kpis.site_recommendation_rate}%
+- ${ic.kpiNames.siteRec}: ${kpis.site_recommendation_rate}%
 - Conversion Rate (Booked Appointment): ${kpis.conversion_rate}%
 - Human Escalation Rate: ${kpis.human_escalation_rate}%
-- KIV Rate: ${kpis.kiv_rate}%
+- ${ic.kpiNames.kiv}: ${kpis.kiv_rate}%
 - AI Autonomy Rate: ${kpis.ai_autonomy_rate}%
 
 **Funnel Stages:**
@@ -35,7 +50,7 @@ ${trends.map((t: { period: string; total: number; conversion_rate: number; detai
 **Escalation:** ${escalation.total} total (${escalation.rate}%)
 Top reasons: ${Object.entries(escalation.reasons).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5).map(([reason, count]) => `${reason} (${count})`).join(", ")}
 
-**KIV (Keep In View):** ${kiv.total} total (${kiv.rate}%)
+**${ic.kpiNames.kiv}:** ${kiv.total} total (${kiv.rate}%)
 Top reasons: ${Object.entries(kiv.reasons).sort((a, b) => (b[1] as number) - (a[1] as number)).slice(0, 5).map(([reason, count]) => `${reason} (${count})`).join(", ")}
 
 Based on this data, provide exactly 5 actionable observations and recommendations. Each should:
@@ -43,7 +58,7 @@ Based on this data, provide exactly 5 actionable observations and recommendation
 2. Identify what's working well OR what needs improvement
 3. Suggest a concrete action to take
 
-Focus on: conversion improvement opportunities, escalation reduction, trend patterns across weeks, funnel bottlenecks, and KIV follow-up potential.
+Focus on: ${ic.focus}.
 
 Return your response as a JSON array of exactly 5 objects with this structure:
 [{"title": "Short headline", "body": "2-3 sentence analysis with specific numbers and a concrete recommendation.", "type": "positive|warning|insight"}]

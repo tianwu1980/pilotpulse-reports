@@ -7,8 +7,7 @@ interface ClientSelectorProps {
 
 const CLIENTS = [
   { id: "henderson", name: "Henderson Security", industry: "Security Services" },
-  // Future clients:
-  // { id: "call_lade", name: "Call Lade", industry: "Blue-Collar Staffing" },
+  { id: "call_lade", name: "Call Lade HR", industry: "Logistics & Haulage" },
   // { id: "skylink", name: "Skylink", industry: "Automotive" },
 ];
 

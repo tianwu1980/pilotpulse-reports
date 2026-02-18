@@ -13,6 +13,8 @@ interface BreakdownChartsProps {
   area: Record<string, number>;
   shift: Record<string, number>;
   permRelief: Record<string, number>;
+  subtitle?: string;
+  titles?: [string, string, string];
 }
 
 const CHART_COLORS = [
@@ -92,6 +94,8 @@ export default function BreakdownCharts({
   area,
   shift,
   permRelief,
+  subtitle = "Henderson Security — candidate preference distribution",
+  titles = ["Area Preference", "Shift Preference", "Permanent vs Relief"] as [string, string, string],
 }: BreakdownChartsProps) {
   return (
     <div className="report-section">
@@ -99,12 +103,12 @@ export default function BreakdownCharts({
         Detailed Breakdown
       </h3>
       <p className="text-sm text-text-muted mb-4">
-        Henderson Security — candidate preference distribution
+        {subtitle}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <BreakdownPie title="Area Preference" data={area} />
-        <BreakdownPie title="Shift Preference" data={shift} />
-        <BreakdownPie title="Permanent vs Relief" data={permRelief} />
+        <BreakdownPie title={titles[0]} data={area} />
+        <BreakdownPie title={titles[1]} data={shift} />
+        <BreakdownPie title={titles[2]} data={permRelief} />
       </div>
     </div>
   );

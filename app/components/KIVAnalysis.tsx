@@ -4,9 +4,19 @@ interface KIVAnalysisProps {
   total: number;
   rate: number;
   reasons: Record<string, number>;
+  title?: string;
+  subtitle?: string;
+  emptyMessage?: string;
 }
 
-export default function KIVAnalysis({ total, rate, reasons }: KIVAnalysisProps) {
+export default function KIVAnalysis({
+  total,
+  rate,
+  reasons,
+  title = "KIV Analysis",
+  subtitle = 'Candidates marked as "Keep In View" — pending follow-up',
+  emptyMessage = "No KIV candidates in this period.",
+}: KIVAnalysisProps) {
   const sorted = Object.entries(reasons)
     .filter(([k]) => k && k !== "" && k !== "Not specified")
     .sort((a, b) => b[1] - a[1]);
@@ -16,26 +26,26 @@ export default function KIVAnalysis({ total, rate, reasons }: KIVAnalysisProps) 
   return (
     <div className="report-section bg-white rounded-2xl border border-border p-6">
       <h3 className="text-lg font-bold font-[family-name:var(--font-display)] text-navy mb-1">
-        KIV Analysis
+        {title}
       </h3>
       <p className="text-sm text-text-muted mb-6">
-        Candidates marked as &quot;Keep In View&quot; — pending follow-up
+        {subtitle}
       </p>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-bg rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-warning">{total}</p>
-          <p className="text-xs text-text-muted mt-1">Total KIV</p>
+          <p className="text-xs text-text-muted mt-1">Total</p>
         </div>
         <div className="bg-bg rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-warning">{rate}%</p>
-          <p className="text-xs text-text-muted mt-1">KIV Rate</p>
+          <p className="text-xs text-text-muted mt-1">Rate</p>
         </div>
       </div>
 
       {sorted.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-text-secondary mb-3">KIV Reasons</h4>
+          <h4 className="text-sm font-semibold text-text-secondary mb-3">Reasons</h4>
           <div className="space-y-2">
             {sorted.map(([reason, count]) => {
               const pct = total > 0 ? ((count / total) * 100).toFixed(1) : "0";
@@ -58,7 +68,7 @@ export default function KIVAnalysis({ total, rate, reasons }: KIVAnalysisProps) 
             })}
             {notSpecified > 0 && (
               <p className="text-xs text-text-muted mt-2">
-                + {notSpecified} KIV{notSpecified > 1 ? "s" : ""} with no reason specified
+                + {notSpecified} with no reason specified
               </p>
             )}
           </div>
@@ -67,7 +77,7 @@ export default function KIVAnalysis({ total, rate, reasons }: KIVAnalysisProps) 
 
       {total === 0 && (
         <p className="text-sm text-success font-medium">
-          No KIV candidates in this period.
+          {emptyMessage}
         </p>
       )}
     </div>

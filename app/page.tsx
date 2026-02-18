@@ -12,9 +12,8 @@ import EscalationAnalysis from "./components/EscalationAnalysis";
 import KIVAnalysis from "./components/KIVAnalysis";
 import TrendChart from "./components/TrendChart";
 import PDFExportButton from "./components/PDFExportButton";
+import { getClientConfig } from "./clientConfig";
 import type { ReportData, ExcelRow } from "./types";
-
-const WEBHOOK_URL = process.env.NEXT_PUBLIC_WEBHOOK_URL || "";
 
 export default function Home() {
   const defaultRange = getDefaultDateRange();
@@ -36,13 +35,15 @@ export default function Home() {
     setError(null);
   }, []);
 
+  const config = getClientConfig(client);
+
   const generateReport = async () => {
     if (rows.length === 0) {
       setError("Please upload at least one Excel file first.");
       return;
     }
-    if (!WEBHOOK_URL) {
-      setError("Webhook URL not configured. Set NEXT_PUBLIC_WEBHOOK_URL in .env.local");
+    if (!config.webhookUrl) {
+      setError(`Webhook URL not configured for ${config.name}. Check .env.local`);
       return;
     }
 
@@ -50,7 +51,7 @@ export default function Home() {
     setError(null);
 
     try {
-      const response = await fetch(WEBHOOK_URL, {
+      const response = await fetch(config.webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,6 +77,7 @@ export default function Home() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            client_id: client,
             kpis: data.kpis,
             trends: data.trends,
             funnel: data.funnel,
@@ -201,7 +203,7 @@ export default function Home() {
                     Monthly Performance Report
                   </p>
                   <h2 className="text-3xl font-bold font-[family-name:var(--font-display)] mb-2">
-                    Henderson Security
+                    {config.reportTitle}
                   </h2>
                   <p className="text-lg text-white/80">
                     {formatPeriod(report.period.start, report.period.end)}
@@ -262,9 +264,9 @@ export default function Home() {
                   icon={<svg className="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                 />
                 <KPIScorecard
-                  label="Site Rec. Rate"
+                  label={config.kpiLabels.siteRecommendation.label}
                   value={`${report.kpis.site_recommendation_rate}%`}
-                  subtitle={`${report.kpis.site_recommended} recommended`}
+                  subtitle={config.kpiLabels.siteRecommendation.subtitle(report.kpis.site_recommended)}
                   color="purple"
                   icon={<svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
                 />
@@ -283,9 +285,9 @@ export default function Home() {
                   icon={<svg className="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>}
                 />
                 <KPIScorecard
-                  label="KIV Rate"
+                  label={config.kpiLabels.kiv.label}
                   value={`${report.kpis.kiv_rate}%`}
-                  subtitle={`${report.kpis.kiv} candidates`}
+                  subtitle={config.kpiLabels.kiv.subtitle(report.kpis.kiv)}
                   color="amber"
                   icon={<svg className="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                 />
@@ -306,6 +308,8 @@ export default function Home() {
                 area={report.breakdowns.area}
                 shift={report.breakdowns.shift}
                 permRelief={report.breakdowns.perm_relief}
+                subtitle={config.breakdownSubtitle}
+                titles={config.breakdownTitles}
               />
             </div>
 
@@ -325,6 +329,9 @@ export default function Home() {
                 total={report.kiv.total}
                 rate={report.kiv.rate}
                 reasons={report.kiv.reasons}
+                title={config.kivSectionConfig.title}
+                subtitle={config.kivSectionConfig.subtitle}
+                emptyMessage={config.kivSectionConfig.emptyMessage}
               />
             </div>
 
