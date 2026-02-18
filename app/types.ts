@@ -63,3 +63,25 @@ export interface FunnelStage {
 }
 
 export type ExcelRow = Record<string, string | number | boolean | null>;
+
+export interface BenchmarkInputs {
+  costPerRecruiterHour: number | null;
+  manualScreeningMinutes: number | null;
+  recruiterHoursPerDay: number | null;
+  monthlyRecruiterSalary: number | null;
+}
+
+export interface SuccessStory {
+  headline: string;
+  heroMetrics: { value: string; label: string; context: string }[];
+  roiSection: {
+    title: string;
+    narrative: string;
+    savings: { metric: string; value: string; calculation: string }[];
+  } | null;
+  throughputSection: { title: string; narrative: string };
+  conversionSection: { title: string; narrative: string };
+  autonomySection: { title: string; narrative: string };
+  trendSummary: string | null;
+  closingStatement: string;
+}

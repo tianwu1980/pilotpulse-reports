@@ -12,6 +12,7 @@ import EscalationAnalysis from "./components/EscalationAnalysis";
 import KIVAnalysis from "./components/KIVAnalysis";
 import TrendChart from "./components/TrendChart";
 import PDFExportButton from "./components/PDFExportButton";
+import SuccessStoryModal from "./components/SuccessStoryModal";
 import { getClientConfig } from "./clientConfig";
 import type { ReportData, ExcelRow } from "./types";
 
@@ -29,6 +30,7 @@ export default function Home() {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsInstructions, setInsightsInstructions] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showSuccessStory, setShowSuccessStory] = useState(false);
 
   const handleRowsParsed = useCallback((parsedRows: ExcelRow[], names: string[]) => {
     setRows(parsedRows);
@@ -134,7 +136,17 @@ export default function Home() {
             </div>
           </div>
           {report && !report.empty && (
-            <div className="no-print">
+            <div className="no-print flex items-center gap-3">
+              <button
+                onClick={() => setShowSuccessStory(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white/10 text-white rounded-xl font-medium text-sm
+                           hover:bg-white/20 transition-colors border border-white/20"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                Success Story
+              </button>
               <PDFExportButton
                 targetId="report-container"
                 fileName={`${client}-report-${startDate}-to-${endDate}`}
@@ -512,6 +524,15 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {report && !report.empty && (
+        <SuccessStoryModal
+          isOpen={showSuccessStory}
+          onClose={() => setShowSuccessStory(false)}
+          report={report}
+          clientId={client}
+        />
+      )}
     </div>
   );
 }

@@ -19,6 +19,17 @@ export interface ClientConfig {
     subtitle: string;
     emptyMessage: string;
   };
+  successStoryContext: {
+    roleDescription: string;
+    companyContext: string;
+    defaultBenchmarks: {
+      costPerRecruiterHour: number;
+      manualScreeningMinutes: number;
+      recruiterHoursPerDay: number;
+      monthlyRecruiterSalary: number;
+    };
+    defaultInstructions: string;
+  };
 }
 
 export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
@@ -55,6 +66,21 @@ Provide actionable recommendations that help improve the chatbot's recruitment p
       subtitle: 'Candidates marked as "Keep In View" — pending follow-up',
       emptyMessage: "No KIV candidates in this period.",
     },
+    successStoryContext: {
+      roleDescription: "security guards across multiple sites in Singapore",
+      companyContext: "Henderson Security, a leading security services provider in Singapore",
+      defaultBenchmarks: {
+        costPerRecruiterHour: 25,
+        manualScreeningMinutes: 30,
+        recruiterHoursPerDay: 8,
+        monthlyRecruiterSalary: 4000,
+      },
+      defaultInstructions: `Write an investor-facing success story for Henderson Security's AI-powered recruitment chatbot (PilotPulse) that screens security guard candidates.
+
+Focus on: cost savings from AI-driven screening, 24/7 availability replacing manual recruiter hours, conversion efficiency from chatbot to booked appointments, AI autonomy rate, and scalability across multiple security sites.
+
+Tone: professional, data-driven, confident but not hyperbolic. Suitable for investor presentations.`,
+    },
   },
   call_lade: {
     id: "call_lade",
@@ -88,6 +114,21 @@ Provide actionable recommendations that help improve the chatbot's recruitment p
       title: "Rejection Analysis",
       subtitle: 'Candidates marked as "Rejected" — did not meet eligibility criteria',
       emptyMessage: "No rejected candidates in this period.",
+    },
+    successStoryContext: {
+      roleDescription: "logistics and haulage roles (Prime Mover Drivers, Lashing Specialists, Reefer Technicians, IGH)",
+      companyContext: "Call Lade HR, a logistics and haulage recruitment specialist",
+      defaultBenchmarks: {
+        costPerRecruiterHour: 28,
+        manualScreeningMinutes: 35,
+        recruiterHoursPerDay: 8,
+        monthlyRecruiterSalary: 4500,
+      },
+      defaultInstructions: `Write an investor-facing success story for Call Lade HR's AI-powered recruitment chatbot (PilotPulse) that screens logistics and haulage candidates (Prime Mover Drivers, Lashing Specialists, Reefer Technicians, IGH).
+
+Focus on: cost savings from AI-driven screening, 24/7 availability, eligibility pre-screening efficiency, conversion from chatbot to booked appointments, and scalability across multiple logistics roles.
+
+Tone: professional, data-driven, confident but not hyperbolic. Suitable for investor presentations.`,
     },
   },
 };
