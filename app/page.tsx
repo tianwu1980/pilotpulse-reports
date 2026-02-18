@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import ClientSelector from "./components/ClientSelector";
 import DateRangePicker, { getDefaultDateRange } from "./components/DateRangePicker";
@@ -27,6 +27,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [insights, setInsights] = useState<{ title: string; body: string; type: string }[] | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsInstructions, setInsightsInstructions] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const handleRowsParsed = useCallback((parsedRows: ExcelRow[], names: string[]) => {
     setRows(parsedRows);
@@ -36,6 +38,11 @@ export default function Home() {
   }, []);
 
   const config = getClientConfig(client);
+
+  // Reset AI instructions when client changes
+  useEffect(() => {
+    setInsightsInstructions(config.defaultInsightsInstructions);
+  }, [client, config.defaultInsightsInstructions]);
 
   const generateReport = async () => {
     if (rows.length === 0) {
@@ -78,6 +85,7 @@ export default function Home() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             client_id: client,
+            custom_instructions: insightsInstructions,
             kpis: data.kpis,
             trends: data.trends,
             funnel: data.funnel,
@@ -151,6 +159,49 @@ export default function Home() {
               onEndChange={setEndDate}
             />
           </div>
+          {/* AI Instructions */}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowInstructions(!showInstructions)}
+              className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-navy transition-colors"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${showInstructions ? "rotate-90" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              AI Observations Instructions
+              <span className="text-xs text-text-muted font-normal">(customize what the AI focuses on)</span>
+            </button>
+            {showInstructions && (
+              <div className="mt-3">
+                <textarea
+                  value={insightsInstructions}
+                  onChange={(e) => setInsightsInstructions(e.target.value)}
+                  rows={5}
+                  className="w-full px-4 py-3 bg-white border border-border rounded-xl text-sm text-text-primary
+                             focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent
+                             transition-all resize-y font-mono leading-relaxed"
+                  placeholder="Enter instructions for the AI observations..."
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-text-muted">
+                    These instructions guide what the AI focuses on when generating observations.
+                  </p>
+                  <button
+                    onClick={() => setInsightsInstructions(config.defaultInsightsInstructions)}
+                    className="text-xs text-accent hover:text-accent-light transition-colors font-medium"
+                  >
+                    Reset to default
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <FileUploader onRowsParsed={handleRowsParsed} />
 
           {/* Preview summary */}

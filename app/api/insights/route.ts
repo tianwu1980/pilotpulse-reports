@@ -24,11 +24,15 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { client_id, kpis, trends, funnel, escalation, kiv } = body;
+  const { client_id, custom_instructions, kpis, trends, funnel, escalation, kiv } = body;
 
   const ic = CLIENT_INSIGHTS[client_id] || CLIENT_INSIGHTS.henderson;
 
-  const prompt = `You are a recruitment analytics consultant analyzing performance data for ${ic.context}.
+  const instructionsBlock = custom_instructions
+    ? `\n\n**Additional Instructions from User:**\n${custom_instructions}\n`
+    : "";
+
+  const prompt = `You are a recruitment analytics consultant analyzing performance data for ${ic.context}.${instructionsBlock}
 
 Here is the data for this reporting period:
 

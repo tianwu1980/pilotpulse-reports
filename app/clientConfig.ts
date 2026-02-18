@@ -13,6 +13,7 @@ export interface ClientConfig {
   insightsContext: string;
   insightsFocus: string;
   insightsKpiNames: { siteRec: string; kiv: string };
+  defaultInsightsInstructions: string;
   kivSectionConfig: {
     title: string;
     subtitle: string;
@@ -44,6 +45,11 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
     insightsFocus:
       "conversion improvement, escalation reduction, trend patterns, funnel bottlenecks, KIV follow-up potential",
     insightsKpiNames: { siteRec: "Site Recommendation Rate", kiv: "KIV Rate" },
+    defaultInsightsInstructions: `You are analyzing Henderson Security's AI chatbot recruitment system (PilotPulse) for security guard recruitment.
+
+Focus on: conversion improvement, escalation reduction, trend patterns across weeks, funnel bottlenecks, and KIV follow-up potential.
+
+Provide actionable recommendations that help improve the chatbot's recruitment performance.`,
     kivSectionConfig: {
       title: "KIV Analysis",
       subtitle: 'Candidates marked as "Keep In View" — pending follow-up',
@@ -73,6 +79,11 @@ export const CLIENT_CONFIGS: Record<string, ClientConfig> = {
     insightsFocus:
       "conversion improvement, eligibility criteria optimization, escalation reduction, trend patterns, rejection analysis",
     insightsKpiNames: { siteRec: "Eligibility Rate", kiv: "Rejection Rate" },
+    defaultInsightsInstructions: `You are analyzing Call Lade HR's AI chatbot recruitment system (PilotPulse) for logistics and haulage roles (Prime Mover Driver, Lashing Specialist, Reefer Technician, IGH).
+
+Focus on: conversion improvement, eligibility criteria optimization, escalation reduction, trend patterns, and rejection analysis.
+
+Provide actionable recommendations that help improve the chatbot's recruitment performance for logistics roles.`,
     kivSectionConfig: {
       title: "Rejection Analysis",
       subtitle: 'Candidates marked as "Rejected" — did not meet eligibility criteria',
