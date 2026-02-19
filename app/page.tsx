@@ -28,6 +28,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [insights, setInsights] = useState<{ title: string; body: string; type: string }[] | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
   const [insightsInstructions, setInsightsInstructions] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
   const [showSuccessStory, setShowSuccessStory] = useState(false);
@@ -78,6 +79,7 @@ export default function Home() {
       const data: ReportData = await response.json();
       setReport(data);
       setInsights(null);
+      setInsightsError(null);
 
       // Fetch AI insights in the background
       if (!data.empty && data.trends && data.trends.length > 0) {
@@ -96,8 +98,14 @@ export default function Home() {
           }),
         })
           .then((r) => r.json())
-          .then((d) => { if (d.insights) setInsights(d.insights); })
-          .catch(() => {})
+          .then((d) => {
+            if (d.insights) {
+              setInsights(d.insights);
+            } else {
+              setInsightsError(d.error || "Failed to generate insights");
+            }
+          })
+          .catch((e) => setInsightsError(e.message || "Network error"))
           .finally(() => setInsightsLoading(false));
       }
     } catch (err) {
@@ -445,6 +453,11 @@ export default function Home() {
                     );
                   })}
                 </div>
+              ) : insightsError ? (
+                <div className="p-4 bg-danger/5 border border-danger/20 rounded-xl">
+                  <p className="text-sm font-medium text-danger mb-1">AI insights failed</p>
+                  <p className="text-xs text-text-secondary">{insightsError}</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {report.kpis.conversion_rate > 0 && (
@@ -494,7 +507,7 @@ export default function Home() {
                     </div>
                   )}
                   <p className="text-xs text-text-muted italic mt-2">
-                    Add an ANTHROPIC_API_KEY to .env.local to enable AI-powered insights.
+                    Add ANTHROPIC_API_KEY to your environment to enable AI-powered insights.
                   </p>
                 </div>
               )}
