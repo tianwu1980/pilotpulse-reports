@@ -102,7 +102,7 @@ export default function Home() {
             if (d.insights) {
               setInsights(d.insights);
             } else {
-              setInsightsError(d.error || "Failed to generate insights");
+              setInsightsError((d.error || "Failed to generate insights") + (d.details ? ` — ${d.details}` : ""));
             }
           })
           .catch((e) => setInsightsError(e.message || "Network error"))
